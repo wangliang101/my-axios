@@ -1,5 +1,16 @@
-import { axios } from '../src';
+import { axios as axiosT } from '../src';
+import axios from 'axios';
 
-axios.get({});
+axios({
+  method: 'GET',
+  url: 'http://localhost:3005/posts'
+}).then(response => {
+  console.log(response);
+});
 
-axios.post({});
+axiosT({
+  method: 'GET',
+  url: 'http://localhost:3005/posts'
+}).then(response => {
+  console.log(response);
+});
