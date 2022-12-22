@@ -2,28 +2,52 @@
 function Axios(config) {
   //初始化
   this.defaults = config; //为了创建 default 默认属性
-  this.intercepters = {
-    request: {},
-    response: {}
+  this.interceptors = {
+    request: new InterceptorManager(),
+    response: new InterceptorManager()
   };
 }
 //原型添加相关的方法
 Axios.prototype.request = function (config) {
   console.log('发送 AJAX 请求 请求的类型为 ' + config.method);
   // 创建一个promise对象
-  const promise = Promise.resolve(config);
+  let promise = Promise.resolve(config);
   // 声明一个数组
   const chains = [dispatchRequest, undefined];
-  // 调用then方法执行 dispatchRequest 这个方法
-  const result = promise.then(chains[0], chains[1]);
+  console.log('this xx', this);
+  console.dir(this);
+  // 将interceptors.request的请求拦截器放在chains队头
+  this.interceptors.request.handlers.forEach(({ fulfilled, rejected }) => {
+    chains.unshift(fulfilled, rejected);
+  });
+  // 将interceptors.response的响应拦截器放在chains队尾
+  this.interceptors.response.handlers.forEach(({ fulfilled, rejected }) => {
+    chains.push(fulfilled, rejected);
+  });
+  while (chains.length > 0) {
+    promise = promise.then(chains.shift(), chains.shift());
+  }
+  // // 调用then方法执行 dispatchRequest 这个方法
+  // const result = promise.then(chains[0], chains[1]);
   // 返回最终结果
-  return result;
+  return promise;
 };
 Axios.prototype.get = function (config) {
   return this.request({ method: 'GET' });
 };
 Axios.prototype.post = function (config) {
   return this.request({ method: 'POST' });
+};
+
+function InterceptorManager() {
+  this.handlers = [];
+}
+
+InterceptorManager.prototype.use = function (fulfilled, rejected) {
+  this.handlers.push({
+    fulfilled,
+    rejected
+  });
 };
 
 function dispatchRequest(config) {
