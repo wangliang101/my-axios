@@ -70,6 +70,16 @@ function xhrAdapter(config) {
     const xhr = new XMLHttpRequest();
     // 初始化请求
     xhr.open(config.method, config.url);
+
+    // 取消请求处理
+    if (config.cancelToken) {
+      config.cancelToken.promise.then(() => {
+        // 取消请求
+        xhr.abort();
+        // 讲promise状态改为失败
+        reject(new Error('请求已被取消'));
+      });
+    }
     // 发送请求
     xhr.send();
     // 绑定事件
@@ -118,5 +128,21 @@ function createInstance(defaultConfig) {
 }
 
 const axios = createInstance();
+
+function CancelToken(executor) {
+  // 声明变量，以便保存实例对象的resolve方法
+  let resolvePromise;
+  // 为实例对象添加promise属性
+  this.promise = new Promise(resolve => {
+    resolvePromise = resolve;
+  });
+
+  // 执行executor方法
+  executor(function () {
+    resolvePromise();
+  });
+}
+
+axios.CancelToken = CancelToken;
 
 export { axios };
