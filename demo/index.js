@@ -45,12 +45,12 @@ import axios from 'axios';
 //     return Promise.reject(error);
 //   }
 // );
-axios({
-  method: 'GET',
-  url: '/api/posts'
-}).then(response => {
-  console.log(response);
-});
+// axios({
+//   method: 'GET',
+//   url: '/api/posts'
+// }).then(response => {
+//   console.log(response);
+// });
 
 // axiosT.interceptors.request.use(
 //   function one(config) {
@@ -104,23 +104,24 @@ axios({
 //   console.log(response);
 // });
 
-let cancel = null;
+const CancelToken = axiosT.CancelToken;
+const source = CancelToken.source();
+
+// let cancel = null;
 
 const [sendBtu] = document.getElementsByClassName('send');
 
 sendBtu.addEventListener('click', () => {
   console.log('点击了发送');
-  if (cancel !== null) {
-    cancel();
-    cancel = null;
-  }
+  // if (cancel !== null) {
+  //   cancel();
+  //   cancel = null;
+  // }
 
   axiosT({
     method: 'GET',
     url: '/api/posts',
-    cancelToken: new axiosT.CancelToken(function executor(c) {
-      cancel = c;
-    })
+    cancelToken: source.token
   }).then(response => {
     console.log(response);
   });
@@ -130,8 +131,9 @@ const [cancleBtu] = document.getElementsByClassName('cancel');
 
 cancleBtu.addEventListener('click', () => {
   console.log('点击了取消');
-  if (cancel) {
-    cancel();
-    cancel = null;
-  }
+  // if (cancel) {
+  //   cancel();
+  //   cancel = null;
+  // }
+  source.cancel();
 });
